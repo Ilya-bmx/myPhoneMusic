@@ -1,24 +1,27 @@
 package com.business;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import org.apache.commons.httpclient.*;
-import org.apache.commons.httpclient.methods.*;
-import org.apache.commons.httpclient.params.HttpMethodParams;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.mime.MultipartEntity;
+import org.apache.http.entity.mime.content.FileBody;
+import org.apache.http.entity.mime.content.StringBody;
+import org.apache.http.impl.client.DefaultHttpClient;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.Arrays;
 
 public class RequestSender {
 
+    private final String PHONE_INTERFACE_URL;
+
+    RequestSender(String phoneUrl) {
+        this.PHONE_INTERFACE_URL = phoneUrl;
+    }
+
     public void sendGET() throws IOException {
-        URL obj = new URL("http://192.168.1.64/list?path=%2F");
+        URL obj = new URL(PHONE_INTERFACE_URL + "list?path=%2F");
         HttpURLConnection con = (HttpURLConnection) obj.openConnection();
         con.setRequestMethod("GET");
         con.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.61 Safari/537.36");
@@ -43,44 +46,29 @@ public class RequestSender {
 
     }
 
-    public void sendPOST(byte[] musicFile) throws IOException {
-        HttpClient httpClient = new HttpClient();
+    public void sendPOST(File musicFile) {
+        HttpClient httpclient = new DefaultHttpClient();
+        HttpPost httpPost = new HttpPost(PHONE_INTERFACE_URL + "upload");
 
-        PostMethod postMethod = new PostMethod("http://192.168.1.64/upload");
+        FileBody uploadFilePart = new FileBody(musicFile);
+        StringBody stringBody = null;
+        try {
+            stringBody = new StringBody("/");
+        } catch (UnsupportedEncodingException e) {
+            System.out.println("Error while making string body for http post");
+        }
+        MultipartEntity reqEntity = new MultipartEntity();
+        reqEntity.addPart("path", stringBody);
+        reqEntity.addPart("files[]", uploadFilePart);
+        httpPost.setEntity(reqEntity);
 
-        postMethod.setRequestHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.61 Safari/537.36");
-        postMethod.setRequestHeader("Content-Type", "multipart/form-data; boundary=----WebKitFormBoundaryS7EQTjL7Bn1gnqhG");
-        postMethod.setRequestHeader("Accept", "application/json, text/javascript, */*; q=0.01");
-        postMethod.setRequestHeader("Accept-Encoding","gzip, deflate");
-
-
-        NameValuePair nameValuePair1 = new NameValuePair("path", "/");
-        NameValuePair nameValuePair2 = new NameValuePair("files[]", Arrays.toString(musicFile));
-
-        NameValuePair[] parametersBody = {nameValuePair1, nameValuePair2};
-        postMethod.setRequestBody(parametersBody);
-
-        int statusCode = httpClient.executeMethod(postMethod);
-
-        if (statusCode != HttpStatus.SC_OK) {
-            System.err.println("Method failed: " + postMethod.getStatusLine());
-            System.out.println(postMethod.getResponseContentLength());
+        HttpResponse response = null;
+        try {
+            response = httpclient.execute(httpPost);
+        } catch (IOException e) {
+            System.out.println("Error while executing hhtpPost " + e.toString());
         }
 
-        byte[] responseBody = new byte[100000];
-        postMethod.getResponseBodyAsStream().read(responseBody);
-        System.out.println(Arrays.toString(responseBody));
-
+        System.out.println("Response with status: " + (response != null ? response.getStatusLine() : null));
     }
-
-    private String createPostBody(byte[] file) {
-        Gson gson = new Gson();
-
-        JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("path", "/");
-        jsonObject.addProperty("files[]", Arrays.toString(file));
-
-        return gson.toJson(jsonObject);
-    }
-
 }
