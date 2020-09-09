@@ -1,6 +1,8 @@
-com\business\FileNameToLatinConverter.class
 com\business\ThreadProxyFolderUpdateListener.class
+com\business\UserSavedInfoService.class
 com\business\scene\MakeWindow.class
 com\business\Main.class
-com\business\FolderUpdateListener.class
 com\business\RequestSender.class
+com\business\FileNameToLatinConverter.class
+com\business\PhoneAddressValidator.class
+com\business\FolderUpdateListener.class

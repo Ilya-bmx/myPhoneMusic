@@ -1,6 +1,6 @@
 package com.business;
 
-public class ThreadProxyFolderUpdateListener extends Thread{
+public class ThreadProxyFolderUpdateListener extends Thread {
 
     private final String PHONE_INTERFACE_URL;
     private final String MUSIC_DOWNLOADED_FOLDER;
