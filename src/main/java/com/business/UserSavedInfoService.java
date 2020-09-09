@@ -6,60 +6,61 @@ import javafx.collections.ObservableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.Scanner;
+import java.io.*;
 
 //TODO: в другом потоке надо save сделать
 public class UserSavedInfoService {
 
+    private static final String CURRENT_DIR = System.getProperty("user.dir");
+    private static final String USER_INFO_FILE_PATH = "/userInfo.txt";
+    private static final String DOWNLOAD_FOLDER_PATH = "/folderInfo.txt";
     private static final Logger LOGGER = LoggerFactory.getLogger(UserSavedInfoService.class);
 
+    // для jar другой путь для писания код другой
     public ObservableList<String> getExistAddresses() throws FileNotFoundException {
-        ObservableList<String> list = FXCollections.observableArrayList();
-        // для jar другой путь для писания код другой
-        String currentDir = System.getProperty("user.dir");
-        System.out.println("Current working directory : " + currentDir);
-        File file = new File(currentDir + "/userInfo.txt");
-        System.out.println(file.getAbsolutePath());
-
-        if (!file.exists()) {
-            createEmptyFile(file);
-        }
-
-
-        Scanner scanner = new Scanner(file);
-        while (scanner.hasNextLine()) {
-            list.add(scanner.next());
-        }
-        return list;
+        return getInfoList(USER_INFO_FILE_PATH);
     }
 
     public ObservableList<String> getExistDownloadingFolder() throws FileNotFoundException {
-        ObservableList<String> list = FXCollections.observableArrayList();
-        // для jar другой путь для писания код другой
-        String currentDir = System.getProperty("user.dir");
-        File file = new File(currentDir + "/folderInfo.txt");
+        return getInfoList(DOWNLOAD_FOLDER_PATH);
+    }
+
+    private ObservableList<String> getInfoList(String path) throws FileNotFoundException {
+        File file = new File(CURRENT_DIR + path);
 
         if (!file.exists()) {
             createEmptyFile(file);
         }
 
-        Scanner scanner = new Scanner(file);
-        while (scanner.hasNextLine()) {
-            list.add(scanner.next());
+        return getExistFileLines(file);
+    }
+
+    private ObservableList<String> getExistFileLines(File file) throws FileNotFoundException {
+        FileReader fileReader = new FileReader(file);
+        BufferedReader inStream = new BufferedReader(fileReader);
+        ObservableList<String> list = FXCollections.observableArrayList();
+        String inString = "";
+        while (true) {
+            try {
+
+                if ((inString = inStream.readLine()) == null) break;
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            list.add(inString);
         }
         return list;
     }
 
     public void save(String phoneInterfaceAddress, String downloadingFolderPath) {
         saveDownloadingFolderPath(downloadingFolderPath);
-        String currentDir = System.getProperty("user.dir");
-        String userInfoPath = currentDir + "/userInfo.txt";
-        File file = new File(userInfoPath);
-        createFile(userInfoPath);
+        savePhoneInterfaceAddress(phoneInterfaceAddress);
+    }
+
+    private void savePhoneInterfaceAddress(String phoneInterfaceAddress) {
+        String userInfoPath = CURRENT_DIR + USER_INFO_FILE_PATH;
+        File file = createFile(userInfoPath);
 
         if (isExist(phoneInterfaceAddress, file)) return;
 
@@ -67,14 +68,15 @@ public class UserSavedInfoService {
     }
 
     private void saveDownloadingFolderPath(String downloadingFolderPathToSave) {
-        String currentDir = System.getProperty("user.dir");
-        String folderInfoPath = currentDir + "/folderInfo.txt";
-        createFile(folderInfoPath);
+        String folderInfoPath = CURRENT_DIR + DOWNLOAD_FOLDER_PATH;
+        File file = createFile(folderInfoPath);
+
+        if (isExist(downloadingFolderPathToSave, file)) return;
 
         writeInfoIntoFile(folderInfoPath, downloadingFolderPathToSave);
     }
 
-    private void createFile(String path) {
+    private File createFile(String path) {
         File file = new File(path);
         if (!file.exists()) {
             try {
@@ -83,6 +85,7 @@ public class UserSavedInfoService {
                 LOGGER.error("File for user info not created", e);
             }
         }
+        return file;
     }
 
     // TODO: добавить док
@@ -108,11 +111,17 @@ public class UserSavedInfoService {
 
     private int countWord(String word, File file) throws FileNotFoundException {
         int count = 0;
-        Scanner scanner = new Scanner(file);
-        while (scanner.hasNextLine()) {
-            String nextToken = scanner.next();
-            if (nextToken.equals(word))
-                count++;
+        FileReader fileReader = new FileReader(file);
+        BufferedReader inStream = new BufferedReader(fileReader);
+        String inString;
+        while (true) {
+            try {
+                if ((inString = inStream.readLine()) == null) break;
+                if (inString.equals(word))
+                    count++;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
         return count;
     }

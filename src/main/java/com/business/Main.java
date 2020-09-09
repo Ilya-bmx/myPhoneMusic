@@ -38,6 +38,11 @@ public class Main extends Application {
         TextField phoneInterfaceAddressInput = new TextField();
         // существующие адреса
         ObservableList<String> existAddresses = userInfoToFileSaver.getExistAddresses();
+        // дефолтное значение сетим если оно есть
+        if (existAddresses.size() >= 1) {
+            phoneInterfaceAddressInput.setText(existAddresses.get(existAddresses.size() - 1));
+        }
+
         ComboBox<String> addressesComboBox = new ComboBox<>(existAddresses);
         addressesComboBox.setValue("Сохранённые адреса"); // устанавливаем выбранный элемент по умолчанию
         addressesComboBox.setOnAction(event ->
@@ -51,6 +56,10 @@ public class Main extends Application {
         Label musicDownloadedPathLabel = getMusicDownloadedFolder();
         TextField musicDownloadedPathInput = new TextField();
         ObservableList<String> downloadingFolders = userInfoToFileSaver.getExistDownloadingFolder();
+        // дефолтное значение сетим если оно есть
+        if (downloadingFolders.size() >= 1) {
+            musicDownloadedPathInput.setText(downloadingFolders.get(downloadingFolders.size() - 1));
+        }
         ComboBox<String> downloadingFoldersComboBox = new ComboBox<>(downloadingFolders);
         downloadingFoldersComboBox.setValue("Папки загрузок");
         downloadingFoldersComboBox.setOnAction(event ->
@@ -76,6 +85,9 @@ public class Main extends Application {
             userInfoToFileSaver.save(phoneInterfaceAddressInput.getText(), musicDownloadedPathInput.getText());
             phoneInterfaceAddressInput.setEditable(false);
             addressesComboBox.setDisable(true);
+            musicDownloadedPathInput.setEditable(false);
+            downloadingFoldersComboBox.setDisable(true);
+
 
             new ThreadProxyFolderUpdateListener(phoneInterfaceAddressInput.getText(), musicDownloadedPathInput.getText()).start();
 
